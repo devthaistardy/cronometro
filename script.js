@@ -1,3 +1,5 @@
+let wakeLock = null;
+
 // Atualizar relógio principal
 function updateClock() {
   const now = new Date();
@@ -9,17 +11,22 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 
-// Manter a tela ativa
-let wakeLockInterval;
-
-function startWakeLock() {
-  wakeLockInterval = setInterval(() => {
-    document.body.style.background = "linear-gradient(135deg, #0f2027, #203a43, #2c5364)";
-  }, 1000);
+// Manter a tela ativa com a API Wake Lock
+async function startWakeLock() {
+  try {
+    wakeLock = await navigator.wakeLock.request('screen');
+    console.log('Wake Lock ativado!');
+  } catch (err) {
+    console.error('Falha ao ativar Wake Lock:', err);
+  }
 }
 
 function stopWakeLock() {
-  clearInterval(wakeLockInterval);
+  if (wakeLock !== null) {
+    wakeLock.release();
+    wakeLock = null;
+    console.log('Wake Lock desativado!');
+  }
 }
 
 // Modal
@@ -135,15 +142,6 @@ function displayCountdown() {
   document.getElementById('countdown').textContent = `${hours}:${minutes}:${seconds}`;
 }
 
-// Manter tela ativa enquanto o relógio estiver visível
-function keepScreenAwake() {
-  setInterval(() => {
-    if (document.getElementById('clock').style.display !== 'none') {
-      document.body.style.background = "linear-gradient(135deg, #0f2027, #203a43, #2c5364)";
-    }
-  }, 1000);
-}
-
 // LocalStorage
 function saveLastTime(key, seconds) {
   localStorage.setItem(key, seconds);
@@ -169,4 +167,4 @@ function formatSeconds(sec) {
 }
 
 // Iniciar função para manter a tela ativa
-keepScreenAwake();
+startWakeLock();
