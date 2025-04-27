@@ -9,14 +9,42 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 
+// Funções para Wake Lock
+let wakeLock = null;
+
+// Função para solicitar o Wake Lock
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      wakeLock = await navigator.wakeLock.request('screen');
+    }
+  } catch (err) {
+    console.error('Falha ao tentar bloquear a tela: ', err);
+  }
+}
+
+// Função para liberar o Wake Lock
+async function releaseWakeLock() {
+  try {
+    if (wakeLock) {
+      await wakeLock.release();
+      wakeLock = null;
+    }
+  } catch (err) {
+    console.error('Falha ao liberar o bloqueio da tela: ', err);
+  }
+}
+
 // Modal
 function openModal(id) {
   document.getElementById(id).style.display = 'flex';
   loadLastTimes();
+  requestWakeLock(); // Solicitar o Wake Lock ao abrir o modal
 }
 
 function closeModal(id) {
   document.getElementById(id).style.display = 'none';
+  releaseWakeLock(); // Liberar o Wake Lock ao fechar o modal
 }
 
 // Cronômetro
@@ -108,38 +136,33 @@ function resetCountdown() {
   document.getElementById('countdownInputWrapper').style.display = 'block';
   document.getElementById('countdown').style.display = 'none';
   document.getElementById('countdownControls').style.display = 'none';
-  document.getElementById('countdownInput').value = '';
   displayCountdown();
   loadLastTimes();
 }
 
 function displayCountdown() {
-  const hours = String(Math.floor(countdownSeconds / 3600)).padStart(2, '0');
-  const minutes = String(Math.floor((countdownSeconds % 3600) / 60)).padStart(2, '0');
+  const minutes = String(Math.floor(countdownSeconds / 60)).padStart(2, '0');
   const seconds = String(countdownSeconds % 60).padStart(2, '0');
-  document.getElementById('countdown').textContent = `${hours}:${minutes}:${seconds}`;
+  document.getElementById('countdown').textContent = `${minutes}:${seconds}`;
 }
 
-// LocalStorage
-function saveLastTime(key, seconds) {
-  localStorage.setItem(key, seconds);
+// Armazenar e carregar último tempo
+function saveLastTime(id, time) {
+  localStorage.setItem(id, time);
 }
 
 function loadLastTimes() {
   const lastStopwatch = localStorage.getItem('lastStopwatch');
   const lastCountdown = localStorage.getItem('lastCountdown');
-
-  document.getElementById('lastStopwatch').textContent = lastStopwatch ? 
-    `Último tempo: ${formatSeconds(lastStopwatch)}` : 'Último tempo: --:--:--';
-
-  document.getElementById('lastCountdown').textContent = lastCountdown ? 
-    `Última contagem: ${formatSeconds(lastCountdown)}` : 'Última contagem: --:--:--';
-}
-
-function formatSeconds(sec) {
-  sec = parseInt(sec);
-  const hours = String(Math.floor(sec / 3600)).padStart(2, '0');
-  const minutes = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
-  const seconds = String(sec % 60).padStart(2, '0');
-  return `${hours}:${minutes}:${seconds}`;
+  if (lastStopwatch) {
+    const hours = String(Math.floor(lastStopwatch / 3600)).padStart(2, '0');
+    const minutes = String(Math.floor((lastStopwatch % 3600) / 60)).padStart(2, '0');
+    const seconds = String(lastStopwatch % 60).padStart(2, '0');
+    document.getElementById('lastStopwatch').textContent = `Último tempo: ${hours}:${minutes}:${seconds}`;
+  }
+  if (lastCountdown) {
+    const minutes = String(Math.floor(lastCountdown / 60)).padStart(2, '0');
+    const seconds = String(lastCountdown % 60).padStart(2, '0');
+    document.getElementById('lastCountdown').textContent = `Última contagem: ${minutes}:${seconds}`;
+  }
 }
