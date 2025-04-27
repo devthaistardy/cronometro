@@ -135,6 +135,15 @@ function displayCountdown() {
   document.getElementById('countdown').textContent = `${hours}:${minutes}:${seconds}`;
 }
 
+// Manter tela ativa enquanto o relógio estiver visível
+function keepScreenAwake() {
+  setInterval(() => {
+    if (document.getElementById('clock').style.display !== 'none') {
+      document.body.style.background = "linear-gradient(135deg, #0f2027, #203a43, #2c5364)";
+    }
+  }, 1000);
+}
+
 // LocalStorage
 function saveLastTime(key, seconds) {
   localStorage.setItem(key, seconds);
@@ -158,3 +167,6 @@ function formatSeconds(sec) {
   const seconds = String(sec % 60).padStart(2, '0');
   return `${hours}:${minutes}:${seconds}`;
 }
+
+// Iniciar função para manter a tela ativa
+keepScreenAwake();
